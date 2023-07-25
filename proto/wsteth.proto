@@ -2,34 +2,20 @@ syntax = "proto3";
 
 package eth.wsteth.v1;
 
-message Transactions {
-    repeated Transaction transactions = 1;
-}
-
-message Transaction {
+message Transfer {
     string from = 1;
     string to = 2;
     string amount = 3;
     string tx_hash = 4;
-}
-
-message Transfer {
-    Account from = 1;
-    Account to = 2;
-    string amount = 3;
-    string tx_hash = 4;
-    uint64 block_number = 5;
-    uint64 timestamp = 6;
-    uint32 log_index = 7;
+    string block_number = 5;
+    string timestamp = 6;
+    string log_index = 7;
 }
 
 message Transfers {
     repeated Transfer transfers = 1;
 }
 
-message Account {
-    string address = 1;
-}
 
 message Token {
     string name = 1;
@@ -42,14 +28,15 @@ enum ActionType {
     wrap = 0;
     unwrap = 1;
     send = 2;
+    other = 3;
 }
 
 message Action {
     ActionType action_type = 1;
-    Account account = 2;
-    string steth_amount = 3;
-    string wsteth_amount = 4;
-    Transfer wsteth_transfer = 5;
+    string method = 9;
+    string account = 2;
+    string amount = 4;
+    Transfer transfer = 5;
     string tx_hash = 6;
     string block_number = 7;
     string timestamp = 8;

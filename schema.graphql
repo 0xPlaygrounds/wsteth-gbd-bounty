@@ -21,3 +21,21 @@ type Token @entity {
   symbol: String!
   decimals: String!
 }
+
+enum ActionType {
+    WRAP
+    UNWRAP
+    SEND
+}
+
+type Action @entity {
+    id: ID!
+    tx_hash: String!
+    timestamp: BigInt!
+    block_number: BigInt!
+    action_type: ActionType!
+    account: Account!
+    token: Token!
+    amount: BigDecimal
+    transfer: Transfer
+}
