@@ -131,30 +131,36 @@ pub fn store_token(block: eth::Block, o: StoreSetProto<Token>) {
 #[substreams::handlers::store]
 pub fn store_account_holdings(actions: Actions, o: StoreAddBigDecimal) {
     for action in actions.actions {
-        if let Some(transfer) = action.transfer {
-            let from = &transfer.from;
-            let to = &transfer.to;
-            let amount = match bigdecimal::BigDecimal::from_str(&transfer.amount.as_str()) {
-                Ok(d) => substreams::scalar::BigDecimal::from(d),
-                _ => BigDecimal::from(substreams::scalar::BigDecimal::zero())
-            };
 
-            log::info!("token transfer");
-
-            o.add(
-                0,
-                format!("account: {from}"),
-                amount.neg()
-            );
-    
-            o.add(
-                0,
-                format!("account: {to}"),
-                amount
-            );
+        match action.action_type {
+            0 | 1 | 2 => {
+                if let Some(transfer) = action.transfer {
+                    let from = &transfer.from;
+                    let to = &transfer.to;
+                    let amount = match bigdecimal::BigDecimal::from_str(&transfer.amount.as_str()) {
+                        Ok(d) => substreams::scalar::BigDecimal::from(d),
+                        _ => BigDecimal::from(substreams::scalar::BigDecimal::zero())
+                    };
+        
+                    log::info!("token transfer");
+        
+                    o.add(
+                        0,
+                        format!("0x{from}"),
+                        amount.neg()
+                    );
+            
+                    o.add(
+                        0,
+                        format!("0x{to}"),
+                        amount
+                    );
+            }
         }
+        _ => ()
     }
 
+    }
 }
 
 
