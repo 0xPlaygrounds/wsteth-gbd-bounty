@@ -67,7 +67,8 @@ pub enum ActionType {
     Wrap = 0,
     Unwrap = 1,
     Send = 2,
-    Other = 3,
+    Approve = 3,
+    Other = 4,
 }
 impl ActionType {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -79,6 +80,7 @@ impl ActionType {
             ActionType::Wrap => "wrap",
             ActionType::Unwrap => "unwrap",
             ActionType::Send => "send",
+            ActionType::Approve => "approve",
             ActionType::Other => "other",
         }
     }
@@ -88,6 +90,7 @@ impl ActionType {
             "wrap" => Some(Self::Wrap),
             "unwrap" => Some(Self::Unwrap),
             "send" => Some(Self::Send),
+            "approve" => Some(Self::Approve),
             "other" => Some(Self::Other),
             _ => None,
         }

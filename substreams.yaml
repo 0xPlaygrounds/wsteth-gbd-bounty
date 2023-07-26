@@ -20,24 +20,36 @@ binaries:
 modules:
   - name: map_actions
     kind: map
-    initialBlock: 0
+    initialBlock: 11888477
     inputs:
       - source: sf.ethereum.type.v2.Block
     output:
       type: proto:eth.wsteth.v1.Actions
 
-  # - name: store_account_holdings
-  #   kind: store
-  #   initialBlock: 0
-  #   updatePolicy: add
-  #   valueType: bigint
-  #   inputs:
-  #     - map: map_transactions
+  - name: store_account_holdings
+    kind: store
+    initialBlock: 11888477
+    updatePolicy: add
+    valueType: bigdecimal
+    inputs:
+      - map: map_actions
 
-  # - name: store_token
-  #   kind: store
-  #   initialBlock: 0
-  #   updatePolicy: set
-  #   valueType: proto:eth.wsteth.v1.Token
-  #   inputs:
-  #     - source: sf.ethereum.type.v2.Block 
+  - name: store_token
+    kind: store
+    initialBlock: 11888477
+    updatePolicy: set
+    valueType: proto:eth.wsteth.v1.Token
+    inputs:
+      - source: sf.ethereum.type.v2.Block 
+
+
+  - name: graph_out
+    kind: map
+    inputs:
+      - map: map_actions
+      - store: store_account_holdings
+        mode: deltas
+      - store: store_token
+        mode: deltas
+    output:
+      type: proto:substreams.entity.v1.EntityChanges

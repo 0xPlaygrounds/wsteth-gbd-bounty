@@ -1,5 +1,6 @@
 type Account @entity {
   id: ID!
+  holdings: BigDecimal!
 }
 
 type Transfer @entity(immutable: true) {
@@ -7,10 +8,10 @@ type Transfer @entity(immutable: true) {
   sender: Account
   receiver: Account!
   amount: String!
-  timestamp: BigInt!
+  timestamp: String!
   txHash: String!
-  blockNumber: BigInt!
-  logIndex: BigInt!
+  blockNumber: String!
+  logIndex: String!
 }
 
 
@@ -22,20 +23,14 @@ type Token @entity {
   decimals: String!
 }
 
-enum ActionType {
-    WRAP
-    UNWRAP
-    SEND
-}
-
-type Action @entity {
+type Action @entity(immutable: true) {
     id: ID!
     tx_hash: String!
-    timestamp: BigInt!
-    block_number: BigInt!
-    action_type: ActionType!
+    timestamp: String!
+    block_number: String!
+    action_type: String!
     account: Account!
     token: Token!
-    amount: BigDecimal
+    amount: String!
     transfer: Transfer
 }

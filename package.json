@@ -1,0 +1,13 @@
+{
+  "name": "wsteth-gbd-bounty",
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "graph build",
+    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ thierry/wsteth-gbd-bounty",
+    "create-local": "graph create --node http://localhost:8020/ thierry/wsteth-gbd-bounty",
+    "remove-local": "graph remove --node http://localhost:8020/ thierry/wsteth-gbd-bounty",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 thierry/wsteth-gbd-bounty",
+    "test": "graph test"
+  },
+  "dependencies": { "@graphprotocol/graph-cli": "0.53.0" }
+}

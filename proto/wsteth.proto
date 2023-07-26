@@ -28,7 +28,8 @@ enum ActionType {
     wrap = 0;
     unwrap = 1;
     send = 2;
-    other = 3;
+    approve = 3;
+    other = 4;
 }
 
 message Action {
