@@ -1,6 +1,7 @@
 type Account @entity {
   id: ID!
   holdings: BigDecimal!
+  actions:[Action]! @derivedFrom(field: "account")
 }
 
 type Transfer @entity(immutable: true) {

@@ -9,7 +9,7 @@ use substreams::{
     Hex,
 };
 use substreams::scalar::BigDecimal;
-use std::str::FromStr;
+use std::{str::FromStr, fmt::format};
 use substreams::store::{DeltaBigDecimal, StoreAdd, StoreAddBigDecimal};
 use substreams::pb::substreams::store_delta::Operation;
 use substreams_entity_change::{pb::entity::EntityChanges, tables::Tables};
@@ -172,7 +172,7 @@ pub fn graph_out(
 ) -> Result<EntityChanges, Error> {
     let mut tables = Tables::new();
     for delta in account_holdings.deltas {
-        let address = delta.key.as_str();
+        let address = delta.get_key();
 
         match delta.operation {
             Operation::Create => {
@@ -197,8 +197,8 @@ pub fn graph_out(
                     let id: String = format!("{}-{}",&transfer.tx_hash,&transfer.log_index);
                     let row = tables.create_row("Transfer", &id);
 
-                    row.set("sender", &transfer.from);
-                    row.set("receiver", &transfer.to);
+                    row.set("sender", format!("0x{}",&transfer.from));
+                    row.set("receiver", format!("0x{}",&transfer.to));
                     row.set("token",String::from("0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"));
                     row.set("timestamp", &transfer.timestamp);
                     row.set("blockNumber", &transfer.block_number);
@@ -229,7 +229,7 @@ pub fn graph_out(
                 a_row.set("timestamp", &action.timestamp);
                 a_row.set("block_number", &action.block_number);
                 a_row.set("action_type", action_to_string(action.action_type));
-                a_row.set("account", &action.account);
+                a_row.set("account", format!("0x{}",&action.account));
                 a_row.set("token", String::from("0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"));
                 a_row.set("amount", &action.amount);
                 a_row.set("transfer", format!("{tid}"));
