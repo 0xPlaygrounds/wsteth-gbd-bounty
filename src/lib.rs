@@ -41,38 +41,34 @@ pub fn map_actions(block: eth::Block) -> Result<Actions, substreams::errors::Err
 fn get_actions<'a>(block: &'a eth::Block) -> impl Iterator<Item = Action> + 'a {
     block
     .transactions()
-    .filter_map(
-        |tx| match tx {
-            tx if tx.to == hex!("7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0") => {
-            Some(tx)
-            }
-            _ => None
-        }
-    )
     .flat_map(
         |tx| 
         tx
         .logs_with_calls()
-        .map(
+        .filter_map(
             |(log, call)| {
-
-                if let Some(_) = WrapCall::match_and_decode(call) {
-                    (ActionType::Wrap, call, log)
-                } else if let Some(_) = UnwrapCall::match_and_decode(call) {
-                    (ActionType::Unwrap, call, log)
-                } else if let Some(_) = TransferCall::match_and_decode(call){
-                    (ActionType::Send, call, log)
-                } else if let Some(_) = ApproveCall::match_and_decode(call){
-                    (ActionType::Approve, call, log)
-                } else {
-                    // Edge case => going directly to wsteth from eth
-                    // recipient is wsteth but no method, forwards call opcode directly to steth
-                    // receive() external payable -> fallback that only receives eth and no call data
-                    if call.call.input.is_empty() {
-                        (ActionType::Wrap, call, log)
+                // hex!("7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0")
+                if log.address == hex!("7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0") {
+                    if let Some(_) = WrapCall::match_and_decode(call) {
+                        Some((ActionType::Wrap, call, log))
+                    } else if let Some(_) = UnwrapCall::match_and_decode(call) {
+                        Some((ActionType::Unwrap, call, log))
+                    } else if let Some(_) = TransferCall::match_and_decode(call){
+                        Some((ActionType::Send, call, log))
+                    } else if let Some(_) = ApproveCall::match_and_decode(call){
+                        Some((ActionType::Approve, call, log))
                     } else {
-                        (ActionType::Other, call, log)
+                        // Edge case => going directly to wsteth from eth
+                        // recipient is wsteth but no method, forwards call opcode directly to steth
+                        // receive() external payable -> fallback that only receives eth and no call data
+                        if call.call.input.is_empty() {
+                            Some((ActionType::Wrap, call, log))
+                        } else {
+                            Some((ActionType::Other, call, log))
+                        }
                     }
+                } else {
+                    None
                 }
             }
         )
@@ -90,7 +86,7 @@ fn get_actions<'a>(block: &'a eth::Block) -> impl Iterator<Item = Action> + 'a {
 
                 Action {
                     action_type: a.into(),
-                    method: Hex(&c.call.input).to_string(),
+                    method: String::from(&Hex(&c.call.input).to_string()[0..5]),
                     account: Hex(&tx.from).to_string(),
                     amount: value.to_string(),
                     transfer: Some(Transfer {
