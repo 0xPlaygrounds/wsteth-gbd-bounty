@@ -134,35 +134,28 @@ pub fn store_token(block: eth::Block, o: StoreSetProto<Token>) {
 #[substreams::handlers::store]
 pub fn store_account_holdings(actions: Actions, o: StoreAddBigDecimal) {
     for action in actions.actions {
+        if let Some(transfer) = action.transfer {
+            let from = &transfer.from;
+            let to = &transfer.to;
+            let amount = match bigdecimal::BigDecimal::from_str(&transfer.amount.as_str()) {
+                Ok(d) => substreams::scalar::BigDecimal::from(d),
+                _ => BigDecimal::from(substreams::scalar::BigDecimal::zero())
+            };
 
-        match action.action_type {
-            0 | 1 | 2 | 4 => {
-                if let Some(transfer) = action.transfer {
-                    let from = &transfer.from;
-                    let to = &transfer.to;
-                    let amount = match bigdecimal::BigDecimal::from_str(&transfer.amount.as_str()) {
-                        Ok(d) => substreams::scalar::BigDecimal::from(d),
-                        _ => BigDecimal::from(substreams::scalar::BigDecimal::zero())
-                    };
-        
-                    log::info!("token transfer");
-        
-                    o.add(
-                        0,
-                        format!("0x{from}"),
-                        amount.neg()
-                    );
-            
-                    o.add(
-                        0,
-                        format!("0x{to}"),
-                        amount
-                    );
-            }
-        }
-        _ => ()
-    }
+            log::info!("token transfer");
 
+            o.add(
+                0,
+                format!("0x{from}"),
+                amount.neg()
+            );
+    
+            o.add(
+                0,
+                format!("0x{to}"),
+                amount
+            );
+        }   
     }
 }
 
@@ -193,58 +186,45 @@ pub fn graph_out(
     }
 
     for action in &actions.actions {
-        match action.action_type {
-            // anything except approve
-            0 | 1 | 2 | 4 => {
-
-                if let Some(transfer) = &action.transfer {
-                    let id: String = format!("{}-{}",&transfer.tx_hash,&transfer.log_index);
-                    let row = tables.create_row("Transfer", &id);
-
-                    row.set("sender", format!("0x{}",&transfer.from));
-                    row.set("receiver", format!("0x{}",&transfer.to));
-                    row.set("token",String::from("0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"));
-                    row.set("timestamp", &transfer.timestamp);
-                    row.set("blockNumber", &transfer.block_number);
-                    row.set("logIndex", &transfer.log_index);
-                    row.set("txHash", &transfer.tx_hash);
-                    row.set("amount", &transfer.amount);
-                    row.set("address", &transfer.address);
-                }
-
-                fn action_to_string(a:i32) -> String {
-                    match a {
-                        0 => String::from("WRAP"),
-                        1 => String::from("UNWRAP"),
-                        2 => String::from("SEND"),
-                        _ => String::from("OTHER")
-                    }
-                }
-
-                let aid = format!("{}-{}", action_to_string(action.action_type), action.tx_hash);
-                let a_row = tables.create_row("Action", &aid);
-
-                let tid = if let Some(t) = &action.transfer {
-                    format!("{}-{}",&t.tx_hash,&t.log_index)
-                } else {
-                    String::from("")
-                };
-
-                a_row.set("tx_hash", &action.tx_hash);
-                a_row.set("timestamp", &action.timestamp);
-                a_row.set("block_number", &action.block_number);
-                a_row.set("action_type", action_to_string(action.action_type));
-                a_row.set("account", format!("0x{}",&action.account));
-                a_row.set("token", String::from("0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"));
-                a_row.set("amount", &action.amount);
-                a_row.set("transfer", format!("{tid}"));
-
-            } 
-            _ => {
-                ()
+        if let Some(transfer) = &action.transfer {
+            let id: String = format!("{}-{}",&transfer.tx_hash,&transfer.log_index);
+            let row = tables.create_row("Transfer", &id);
+            row.set("sender", format!("0x{}",&transfer.from));
+            row.set("receiver", format!("0x{}",&transfer.to));
+            row.set("token",String::from("0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"));
+            row.set("timestamp", &transfer.timestamp);
+            row.set("blockNumber", &transfer.block_number);
+            row.set("logIndex", &transfer.log_index);
+            row.set("txHash", &transfer.tx_hash);
+            row.set("amount", &transfer.amount);
+            row.set("address", &transfer.address);
+        }
+        fn action_to_string(a:i32) -> String {
+            match a {
+                0 => String::from("WRAP"),
+                1 => String::from("UNWRAP"),
+                2 => String::from("SEND"),
+                3 => String::from("APPROVE"),
+                _ => String::from("OTHER")
             }
+        }
+        let aid = format!("{}-{}", action_to_string(action.action_type), action.tx_hash);
+        let a_row = tables.create_row("Action", &aid);
+        let tid = if let Some(t) = &action.transfer {
+            format!("{}-{}",&t.tx_hash,&t.log_index)
+        } else {
+            String::from("")
         };
-    }
+        a_row.set("tx_hash", &action.tx_hash);
+        a_row.set("timestamp", &action.timestamp);
+        a_row.set("block_number", &action.block_number);
+        a_row.set("action_type", action_to_string(action.action_type));
+        a_row.set("account", format!("0x{}",&action.account));
+        a_row.set("token", String::from("0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"));
+        a_row.set("amount", &action.amount);
+        a_row.set("transfer", format!("{tid}"));
+        } 
+    
 
     for delta in tokens.deltas {
         match delta.operation {
