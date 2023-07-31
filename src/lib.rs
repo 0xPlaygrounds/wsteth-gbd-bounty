@@ -86,7 +86,13 @@ fn get_actions<'a>(block: &'a eth::Block) -> impl Iterator<Item = Action> + 'a {
 
                 Action {
                     action_type: a.into(),
-                    method: String::from(&Hex(&c.call.input).to_string()[0..5]),
+                    method: {
+                        if c.call.input.is_empty() {
+                            String::from("0x")
+                        } else {
+                            String::from(&Hex(&c.call.input).to_string()[0..8])
+                        }
+                    },
                     account: Hex(&tx.from).to_string(),
                     amount: value.to_string(),
                     transfer: Some(Transfer {
@@ -96,7 +102,8 @@ fn get_actions<'a>(block: &'a eth::Block) -> impl Iterator<Item = Action> + 'a {
                         tx_hash: hash.to_string(),
                         block_number: b_n.to_string(),
                         timestamp: timestamp.to_string(),
-                        log_index: l.index.to_string()
+                        log_index: l.index.to_string(),
+                        address: Hex(&l.address).to_string()
                     }),
                     tx_hash: hash,
                     block_number: b_n.to_string(),
@@ -129,7 +136,7 @@ pub fn store_account_holdings(actions: Actions, o: StoreAddBigDecimal) {
     for action in actions.actions {
 
         match action.action_type {
-            0 | 1 | 2 => {
+            0 | 1 | 2 | 4 => {
                 if let Some(transfer) = action.transfer {
                     let from = &transfer.from;
                     let to = &transfer.to;
@@ -187,7 +194,8 @@ pub fn graph_out(
 
     for action in &actions.actions {
         match action.action_type {
-            0 | 1 | 2 => {
+            // anything except approve
+            0 | 1 | 2 | 4 => {
 
                 if let Some(transfer) = &action.transfer {
                     let id: String = format!("{}-{}",&transfer.tx_hash,&transfer.log_index);
@@ -201,6 +209,7 @@ pub fn graph_out(
                     row.set("logIndex", &transfer.log_index);
                     row.set("txHash", &transfer.tx_hash);
                     row.set("amount", &transfer.amount);
+                    row.set("address", &transfer.address);
                 }
 
                 fn action_to_string(a:i32) -> String {
@@ -208,7 +217,7 @@ pub fn graph_out(
                         0 => String::from("WRAP"),
                         1 => String::from("UNWRAP"),
                         2 => String::from("SEND"),
-                        _ => String::from("Other")
+                        _ => String::from("OTHER")
                     }
                 }
 

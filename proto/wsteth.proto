@@ -10,6 +10,7 @@ message Transfer {
     string block_number = 5;
     string timestamp = 6;
     string log_index = 7;
+    string address = 8;
 }
 
 message Transfers {

@@ -13,6 +13,7 @@ type Transfer @entity(immutable: true) {
   txHash: String!
   blockNumber: String!
   logIndex: String!
+  address: String!
 }
 
 

@@ -16,6 +16,8 @@ pub struct Transfer {
     pub timestamp: ::prost::alloc::string::String,
     #[prost(string, tag="7")]
     pub log_index: ::prost::alloc::string::String,
+    #[prost(string, tag="8")]
+    pub address: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
