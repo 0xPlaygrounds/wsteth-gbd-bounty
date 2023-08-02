@@ -22,3 +22,4 @@ wsteth-v1.0.0.spkg
 /target
 replay.log
 node_modules
+notebooks/data

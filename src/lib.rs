@@ -185,12 +185,13 @@ pub fn graph_out(
         };
     }
 
+    // not all actions get written, some actions are written without transfer, but transfer exists
     for action in &actions.actions {
-        if let Some(transfer) = &action.transfer {
-            let id: String = format!("{}-{}",&transfer.tx_hash,&transfer.log_index);
+        let tid = if let Some(transfer) = &action.transfer {
+            let id: String = format!("{}-{}",transfer.tx_hash,transfer.log_index);
             let row = tables.create_row("Transfer", &id);
-            row.set("sender", format!("0x{}",&transfer.from));
-            row.set("receiver", format!("0x{}",&transfer.to));
+            row.set("sender", format!("0x{}",transfer.from));
+            row.set("receiver", format!("0x{}",transfer.to));
             row.set("token",String::from("0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0"));
             row.set("timestamp", &transfer.timestamp);
             row.set("blockNumber", &transfer.block_number);
@@ -198,7 +199,12 @@ pub fn graph_out(
             row.set("txHash", &transfer.tx_hash);
             row.set("amount", &transfer.amount);
             row.set("address", &transfer.address);
-        }
+
+            id
+        } else {
+            String::from("")
+        };
+
         fn action_to_string(a:i32) -> String {
             match a {
                 0 => String::from("WRAP"),
@@ -208,13 +214,9 @@ pub fn graph_out(
                 _ => String::from("OTHER")
             }
         }
-        let aid = format!("{}-{}", action_to_string(action.action_type), action.tx_hash);
+        let aid = format!("{}-{}", action_to_string(action.action_type), &tid);
         let a_row = tables.create_row("Action", &aid);
-        let tid = if let Some(t) = &action.transfer {
-            format!("{}-{}",&t.tx_hash,&t.log_index)
-        } else {
-            String::from("")
-        };
+        
         a_row.set("tx_hash", &action.tx_hash);
         a_row.set("timestamp", &action.timestamp);
         a_row.set("block_number", &action.block_number);
