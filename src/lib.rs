@@ -185,9 +185,8 @@ pub fn graph_out(
                     if address == "0x0000000000000000000000000000000000000000" {
                         BigDecimal::zero()
                     } else {
-                        delta.old_value
+                        delta.new_value
                     }
-                    // delta.old_value
                 );
             }
             Operation::Update => {
