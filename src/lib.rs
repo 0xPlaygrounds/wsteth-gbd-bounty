@@ -74,15 +74,25 @@ fn get_actions<'a>(block: &'a eth::Block) -> impl Iterator<Item = Action> + 'a {
         )
         .map(
             |(a, c,l)| {
-                let (from, to, value) = if let Some(t) = WSTETHTransfer::match_and_decode(l) {
-                    (Hex(t.from).to_string(), Hex(t.to).to_string(), t.value.to_string())
-                } else {
-                    (String::from(""),String::from(""), String::from(""))
-                };
-                
+
                 let hash = Hex(&tx.hash).to_string();
                 let b_n = &block.number.to_string();
                 let timestamp = &block.timestamp_seconds().to_string();
+                
+                let transfer = if let Some(t) = WSTETHTransfer::match_and_decode(l) {
+                    Some(Transfer {
+                        from: Hex(t.from).to_string(),
+                        to: Hex(t.to).to_string(),
+                        amount: t.value.to_string(),
+                        tx_hash: hash.to_string(),
+                        block_number: b_n.to_string(),
+                        timestamp: timestamp.to_string(),
+                        log_index: l.index.to_string(),
+                        address: Hex(&l.address).to_string()
+                    })
+                } else {
+                    None
+                };
 
                 Action {
                     action_type: a.into(),
@@ -94,18 +104,14 @@ fn get_actions<'a>(block: &'a eth::Block) -> impl Iterator<Item = Action> + 'a {
                         }
                     },
                     account: Hex(&tx.from).to_string(),
-                    amount: value.to_string(),
-                    transfer: Some(Transfer {
-                        from: from,
-                        to: to,
-                        amount: value.to_string(),
-                        tx_hash: hash.to_string(),
-                        block_number: b_n.to_string(),
-                        timestamp: timestamp.to_string(),
-                        log_index: l.index.to_string(),
-                        address: Hex(&l.address).to_string()
-                    }),
+                    amount: if let Some(t) = &transfer {
+                        t.amount.to_string()
+                    } else { 
+                        String::from("0")
+                    },
+                    transfer: transfer,
                     tx_hash: hash,
+                    log_index: l.index.to_string(),
                     block_number: b_n.to_string(),
                     timestamp: timestamp.to_string()
 
@@ -174,11 +180,26 @@ pub fn graph_out(
             Operation::Create => {
                 let row = tables.create_row("Account", address);
 
-                row.set("holdings", delta.old_value);
+                row.set(
+                    "holdings",
+                    if address == "0x0000000000000000000000000000000000000000" {
+                        BigDecimal::zero()
+                    } else {
+                        delta.old_value
+                    }
+                    // delta.old_value
+                );
             }
             Operation::Update => {
                 let row = tables.update_row("Account", address);
-                row.set("holdings", delta.new_value);
+                row.set(
+                    "holdings",
+                    if address == "0x0000000000000000000000000000000000000000" {
+                        BigDecimal::zero()
+                    } else {
+                        delta.new_value
+                    }
+                );
             }
             Operation::Delete => todo!(),
             x => panic!("unsupported operation {:?}", x),
@@ -214,7 +235,7 @@ pub fn graph_out(
                 _ => String::from("OTHER")
             }
         }
-        let aid = format!("{}-{}", action_to_string(action.action_type), &tid);
+        let aid = format!("{}-{}-{}", action_to_string(action.action_type), &action.tx_hash, &action.log_index);
         let a_row = tables.create_row("Action", &aid);
         
         a_row.set("tx_hash", &action.tx_hash);

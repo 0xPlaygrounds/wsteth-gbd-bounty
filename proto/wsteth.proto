@@ -40,6 +40,7 @@ message Action {
     string amount = 4;
     Transfer transfer = 5;
     string tx_hash = 6;
+    string log_index = 10;
     string block_number = 7;
     string timestamp = 8;
 }

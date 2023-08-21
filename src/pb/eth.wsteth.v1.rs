@@ -52,6 +52,8 @@ pub struct Action {
     pub transfer: ::core::option::Option<Transfer>,
     #[prost(string, tag="6")]
     pub tx_hash: ::prost::alloc::string::String,
+    #[prost(string, tag="10")]
+    pub log_index: ::prost::alloc::string::String,
     #[prost(string, tag="7")]
     pub block_number: ::prost::alloc::string::String,
     #[prost(string, tag="8")]
